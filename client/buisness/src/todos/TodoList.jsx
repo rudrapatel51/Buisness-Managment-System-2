@@ -49,6 +49,36 @@ function TodoList() {
         }
     };
 
+    const deleteTodo = async (id) => {
+        try {
+          await axios.delete('http://localhost:5000/todos', {
+            headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
+            data: { id }
+          });
+          
+          // Update the local state to remove the deleted todo
+          setTodos(todos.filter(todo => todo.id !== id));
+          
+          toast({
+            title: "Todo deleted",
+            description: "The todo item was deleted successfully.",
+            status: "success",
+            duration: 3000,
+            isClosable: true,
+          });
+        } catch (error) {
+          console.error('Error deleting todo:', error);
+          toast({
+            title: "Error",
+            description: "Failed to delete the todo item.",
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+          });
+        }
+      };
+    
+
     const handleLogout = () => {
         localStorage.removeItem('access_token');
         navigate('/login/admin');
@@ -79,6 +109,13 @@ function TodoList() {
                     <li key={todo.id}>
                         <h3>{todo.title}</h3>
                         <p>{todo.description}</p>
+                        <button
+              colorScheme="red"
+              mt={2}
+              onClick={() => deleteTodo(todo.id)}
+            >
+              Delete
+            </button>
                     </li>
                 ))}
             </ul>

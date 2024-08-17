@@ -13,8 +13,10 @@ const RegisterAdmin = () => {
 
     const handleRegister = async (e) => {
         e.preventDefault();
+        const lowerCaseBusiness = business.toLowerCase();
+
         try {
-            const response = await axios.post('http://localhost:5000/admin/register', { username, password, business });
+            const response = await axios.post('http://localhost:5000/admin/register', { username, password,business: lowerCaseBusiness});
             setMessage(response.data.message);
             
             if (response.data.business) {

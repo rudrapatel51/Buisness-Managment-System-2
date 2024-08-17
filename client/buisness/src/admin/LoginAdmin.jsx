@@ -12,10 +12,12 @@ const LoginAdmin = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('http://localhost:5000/login', { username, password });
+            const response = await axios.post('http://localhost:5000/admin/login', { username, password });
             setMessage('Login successful!');
             // Save token or any other necessary data
             localStorage.setItem('access_token', response.data.access_token);
+            localStorage.setItem('businessName', response.data.business);
+
             navigate('/todos');
         } catch (error) {
             if (error.response) {

@@ -63,8 +63,20 @@ def get_user():
         "created_at": user['created_at'].isoformat()
     }), 200
 
+
+# Admin login
+@app.route('/admin/login', methods=['POST'])
+def admin_login():
+    data = request.get_json()
+    user = db.users.find_one({'username': data['username'], 'is_admin': True})
+    if user and check_password_hash(user['password'], data['password']):
+        access_token = create_access_token(identity=str(user['_id']))
+        return jsonify(access_token=access_token, business=user['business']), 200
+    return jsonify({"message": "Invalid credentials"}), 401
+
+
 # Todos management
-@app.route('/todos', methods=['GET', 'POST'])
+@app.route('/todos', methods=['GET', 'POST', 'DELETE'])
 @jwt_required()
 def todos():
     current_user_id = get_jwt_identity()
@@ -100,7 +112,28 @@ def todos():
             return jsonify({"message": "Todo created successfully", "id": str(result.inserted_id)}), 201
         except Exception as e:
             return jsonify({"error": str(e)}), 500
+
+    elif request.method == 'DELETE':
+        data = request.get_json()
+        todo_id = data.get('id')
+        if not todo_id:
+            return jsonify({"message": "Todo ID is required"}), 400
+
+        try:
+            # Ensure the todo belongs to the user's business
+            query = {'_id': ObjectId(todo_id), 'business': user['business']}
+            if user.get('is_admin'):
+                # Admins can delete any todo
+                query = {'_id': ObjectId(todo_id)}
+
+            result = db.todos.delete_one(query)
+            if result.deleted_count == 0:
+                return jsonify({"message": "Todo not found or you're not authorized to delete this todo"}), 404
             
+            return jsonify({"message": "Todo deleted successfully"}), 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+           
 
 # Admin registration
 @app.route('/admin/register', methods=['POST'])
